@@ -84,15 +84,8 @@
         h1 {
             text-align: center;
             color: #2d3748;
-            margin-bottom: 10px;
-            font-size: 2.2rem;
-        }
-
-        .subtitle {
-            text-align: center;
-            color: #718096;
             margin-bottom: 30px;
-            font-size: 0.9rem;
+            font-size: 2.2rem;
         }
 
         .player-wrapper {
@@ -148,6 +141,17 @@
         .song-count {
             font-size: 0.95rem;
             opacity: 0.95;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .next-song-timer {
+            font-size: 0.9rem;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: 600;
         }
 
         /* 곡 목록 스타일 */
@@ -202,6 +206,14 @@
             align-items: center;
             gap: 12px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .song-thumbnail {
+            width: 60px;
+            height: 45px;
+            border-radius: 6px;
+            object-fit: cover;
+            flex-shrink: 0;
         }
 
         .song-item:hover {
@@ -299,17 +311,28 @@
             .playlist-container {
                 max-height: 200px;
             }
+            .song-thumbnail {
+                width: 50px;
+                height: 38px;
+            }
+            .song-count {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>🎵 랜덤 플레이어</h1>
-        <p class="subtitle">총공용 랜덤 재생</p>
         
         <div class="info-box">
             <div class="current-song" id="currentSong">준비 중...</div>
-            <div class="song-count" id="songCount">총 0곡</div>
+            <div class="song-count">
+                <span id="songCount">총 0곡</span>
+                <span class="next-song-timer" id="timer">--:--</span>
+            </div>
         </div>
 
         <div class="player-wrapper">
@@ -344,6 +367,8 @@
         let player;
         let currentSongIndex = -1;
         let playDuration = 0;
+        let timerInterval = null;
+        let remainingTime = 0;
 
         // 개발자 도구 차단
         document.addEventListener('contextmenu', e => e.preventDefault());
@@ -362,11 +387,43 @@
             const playlistDiv = document.getElementById('playlistItems');
             playlistDiv.innerHTML = songs.map((song, index) => `
                 <div class="song-item" id="song-${index}" onclick="playSongByIndex(${index})">
+                    <img src="https://img.youtube.com/vi/${song.id}/mqdefault.jpg" 
+                         alt="${song.title}" 
+                         class="song-thumbnail"
+                         onerror="this.src='https://img.youtube.com/vi/${song.id}/default.jpg'">
                     <span class="song-number">${index + 1}</span>
                     <span class="song-title">${song.title}</span>
                     <span class="playing-indicator" style="display: none;">▶</span>
                 </div>
             `).join('');
+        }
+
+        // 타이머 시작
+        function startTimer(duration) {
+            // 기존 타이머 중지
+            if (timerInterval) {
+                clearInterval(timerInterval);
+            }
+            
+            remainingTime = duration;
+            updateTimerDisplay();
+            
+            timerInterval = setInterval(() => {
+                remainingTime--;
+                updateTimerDisplay();
+                
+                if (remainingTime <= 0) {
+                    clearInterval(timerInterval);
+                }
+            }, 1000);
+        }
+
+        // 타이머 표시 업데이트
+        function updateTimerDisplay() {
+            const minutes = Math.floor(remainingTime / 60);
+            const seconds = remainingTime % 60;
+            document.getElementById('timer').textContent = 
+                `다음 곡: ${minutes}:${seconds.toString().padStart(2, '0')}`;
         }
 
         // 현재 재생 중인 곡 표시 업데이트
@@ -391,6 +448,7 @@
             
             document.getElementById('currentSong').textContent = song.title;
             updatePlayingIndicator();
+            startTimer(playDuration);
             
             if (player && player.loadVideoById) {
                 player.loadVideoById({
@@ -439,6 +497,7 @@
             
             document.getElementById('currentSong').textContent = song.title;
             updatePlayingIndicator();
+            startTimer(playDuration);
             
             if (player && player.loadVideoById) {
                 player.loadVideoById({
@@ -450,6 +509,9 @@
         }
 
         function reloadPage() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+            }
             location.reload();
         }
 
