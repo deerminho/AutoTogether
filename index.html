@@ -120,16 +120,6 @@
             font-weight: 600;
         }
 
-        .duration-info {
-            font-size: 0.85rem;
-            background: rgba(255, 255, 255, 0.15);
-            padding: 4px 10px;
-            border-radius: 15px;
-            margin-top: 8px;
-            display: inline-block;
-            font-weight: 600;
-        }
-
         /* 곡 목록 스타일 */
         .playlist-container {
             background: #f7fafc;
@@ -326,7 +316,6 @@
                 <span id="songCount">총 0곡</span>
                 <span class="next-song-timer" id="timer">--:--</span>
             </div>
-            <div class="duration-info" id="durationInfo">다음 곡까지: --초</div>
         </div>
 
         <div class="player-wrapper">
@@ -437,7 +426,6 @@
                     // 설정이 변경되었을 때만 알림
                     if (oldMin !== minDuration || oldMax !== maxDuration) {
                         showSyncStatus(`⚙️ 재생 시간 업데이트: ${minDuration}~${maxDuration}초`);
-                        updateDurationInfo();
                     }
                 }
             });
@@ -452,12 +440,6 @@
             setTimeout(() => {
                 status.style.display = 'none';
             }, 3000);
-        }
-
-        // 재생 시간 정보 업데이트
-        function updateDurationInfo() {
-            document.getElementById('durationInfo').textContent = 
-                `다음 곡까지: ${remainingTime}초`;
         }
 
         // 랜덤 재생 시간 계산
@@ -551,8 +533,6 @@
             const seconds = remainingTime % 60;
             document.getElementById('timer').textContent = 
                 `다음 곡: ${minutes}:${seconds.toString().padStart(2, '0')}`;
-            document.getElementById('durationInfo').textContent = 
-                `다음 곡까지: ${remainingTime}초`;
         }
 
         // 현재 재생 중인 곡 표시 업데이트
