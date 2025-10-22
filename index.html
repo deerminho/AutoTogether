@@ -474,7 +474,7 @@
         function playRandomSong() {
             currentSongIndex = Math.floor(Math.random() * songs.length);
             const song = songs[currentSongIndex];
-            playDuration = Math.floor(Math.random() * 11) + 45;
+            playDuration = Math.floor(Math.random() * 11) + 95;
             
             document.getElementById('currentSong').textContent = song.title;
             updatePlayingIndicator();
@@ -508,6 +508,7 @@
     </script>
 </body>
 </html>
+
 
 
 
