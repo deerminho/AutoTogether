@@ -459,14 +459,24 @@
         }
 
         // 랜덤 곡 재생
-        function playRandomSong() {
-            currentSongIndex = Math.floor(Math.random() * songs.length);
-            const song = songs[currentSongIndex];
-            playDuration = Math.floor(Math.random() * 11) + 45;
-            
-            document.getElementById('currentSong').textContent = song.title;
-            updatePlayingIndicator();
-            startTimer(playDuration);
+
+  function getRandomTime() {
+      return Math.floor(Math.random() * (105 - 95 + 1)) + 95;
+    }
+        
+ // 🎵 랜덤 영상 재생
+    function playNextRandom() {
+      clearInterval(countdownInterval);
+      const randomIndex = Math.floor(Math.random() * videos.length);
+      currentIndex = randomIndex;
+      const video = videos[randomIndex];
+      const iframe = document.getElementById("videoFrame");
+      const randomStart = Math.floor(Math.random() * 20); // 시작 위치 약간 랜덤
+      iframe.src = `https://www.youtube.com/embed/${video.id}?autoplay=1&start=${randomStart}`;
+      document.getElementById("videoTitle").textContent = video.title;
+      startCountdown(getRandomTime());
+    }
+
             
             if (player && player.loadVideoById) {
                 player.loadVideoById({
@@ -496,6 +506,7 @@
     </script>
 </body>
 </html>
+
 
 
 
