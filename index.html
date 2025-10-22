@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>랜덤 플레이어</title>
+    <title>랜덤 플레이어 (90~115초)</title>
     <style>
         * {
             margin: 0;
@@ -117,6 +117,16 @@
             background: rgba(255, 255, 255, 0.2);
             padding: 5px 12px;
             border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .duration-info {
+            font-size: 0.85rem;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 4px 10px;
+            border-radius: 15px;
+            margin-top: 8px;
+            display: inline-block;
             font-weight: 600;
         }
 
@@ -263,6 +273,21 @@
             transform: translateY(-1px);
         }
 
+        .sync-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 181, 184, 0.9);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(0, 181, 184, 0.4);
+            z-index: 1000;
+            display: none;
+        }
+
         @media (max-width: 600px) {
             .container {
                 padding: 25px;
@@ -290,6 +315,8 @@
     </style>
 </head>
 <body>
+    <div class="sync-status" id="syncStatus">🔄 동기화 중...</div>
+    
     <div class="container">
         <h1>🎵 랜덤 플레이어</h1>
         
@@ -299,6 +326,7 @@
                 <span id="songCount">총 0곡</span>
                 <span class="next-song-timer" id="timer">--:--</span>
             </div>
+            <div class="duration-info" id="durationInfo">다음 곡까지: --초</div>
         </div>
 
         <div class="player-wrapper">
@@ -319,10 +347,37 @@
         </div>
     </div>
 
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://www.youtube.com/iframe_api"></script>
+    
     <script>
         // ============================================
-        // 🎵 여기서 곡 리스트를 수정하세요!
+        // 🔥 Firebase 설정 (첫 번째 파일의 설정을 여기에 붙여넣으세요)
+        // ============================================
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            databaseURL: "YOUR_DATABASE_URL",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        // Firebase 초기화
+        let db = null;
+        try {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.database();
+            console.log('✅ Firebase 연결 성공');
+        } catch (error) {
+            console.warn('⚠️ Firebase 설정 필요:', error);
+        }
+
+        // ============================================
+        // 🎵 곡 리스트
         // ============================================
         const songs = [
             { id: 'Ghg7vG3NMs4', title: 'Hankyeryeong Pass'},
@@ -342,13 +397,74 @@
             { id: 'ZOPl8hBKd5c', title: ' 하이뮨의 NEW CF 촬영 현장'},
             { id: 'jXJKJc5fZnE', title: '홀로된 사랑 (Lonely Love) Official MV'},
             { id: '6lq_G6l4xRs', title: 'Lonely Love(홀로된 사랑) | 1theK' }
-            
-       ];
+        ];
+
         let player;
         let currentSongIndex = -1;
         let playDuration = 0;
         let timerInterval = null;
         let remainingTime = 0;
+
+        // 재생 시간 설정 (Firebase에서 실시간 동기화)
+        let minDuration = 90;
+        let maxDuration = 115;
+
+        // Firebase에서 재생 시간 설정 가져오기 및 실시간 감시
+        if (db) {
+            const settingsRef = db.ref('settings/player2');
+            
+            // 초기 설정 확인 및 생성
+            settingsRef.once('value', (snapshot) => {
+                if (!snapshot.exists()) {
+                    settingsRef.set({
+                        minDuration: 90,
+                        maxDuration: 115,
+                        lastUpdate: Date.now()
+                    });
+                }
+            });
+
+            // 실시간 동기화
+            settingsRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    const oldMin = minDuration;
+                    const oldMax = maxDuration;
+                    
+                    minDuration = data.minDuration || 90;
+                    maxDuration = data.maxDuration || 115;
+                    
+                    // 설정이 변경되었을 때만 알림
+                    if (oldMin !== minDuration || oldMax !== maxDuration) {
+                        showSyncStatus(`⚙️ 재생 시간 업데이트: ${minDuration}~${maxDuration}초`);
+                        updateDurationInfo();
+                    }
+                }
+            });
+        }
+
+        // 동기화 상태 표시
+        function showSyncStatus(message) {
+            const status = document.getElementById('syncStatus');
+            status.textContent = message;
+            status.style.display = 'block';
+            
+            setTimeout(() => {
+                status.style.display = 'none';
+            }, 3000);
+        }
+
+        // 재생 시간 정보 업데이트
+        function updateDurationInfo() {
+            document.getElementById('durationInfo').textContent = 
+                `다음 곡까지: ${remainingTime}초`;
+        }
+
+        // 랜덤 재생 시간 계산
+        function getRandomDuration() {
+            const range = maxDuration - minDuration + 1;
+            return Math.floor(Math.random() * range) + minDuration;
+        }
 
         // 개발자 도구 차단
         document.addEventListener('contextmenu', e => e.preventDefault());
@@ -435,6 +551,8 @@
             const seconds = remainingTime % 60;
             document.getElementById('timer').textContent = 
                 `다음 곡: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+            document.getElementById('durationInfo').textContent = 
+                `다음 곡까지: ${remainingTime}초`;
         }
 
         // 현재 재생 중인 곡 표시 업데이트
@@ -455,7 +573,7 @@
         function playSongByIndex(index) {
             currentSongIndex = index;
             const song = songs[currentSongIndex];
-            playDuration = Math.floor(Math.random() * 11) + 95;
+            playDuration = getRandomDuration();
             
             document.getElementById('currentSong').textContent = song.title;
             updatePlayingIndicator();
@@ -474,7 +592,7 @@
         function playRandomSong() {
             currentSongIndex = Math.floor(Math.random() * songs.length);
             const song = songs[currentSongIndex];
-            playDuration = Math.floor(Math.random() * 11) + 95;
+            playDuration = getRandomDuration();
             
             document.getElementById('currentSong').textContent = song.title;
             updatePlayingIndicator();
@@ -508,7 +626,3 @@
     </script>
 </body>
 </html>
-
-
-
-
