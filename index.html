@@ -343,7 +343,7 @@
     
     <script>
         // ============================================
-        // 🔥 Firebase 설정 (첫 번째 파일의 설정을 여기에 붙여넣으세요)
+        // 🔥 Firebase 설정
         // ============================================
         const firebaseConfig = {
             apiKey: "YOUR_API_KEY",
@@ -355,14 +355,19 @@
             appId: "YOUR_APP_ID"
         };
 
-        // Firebase 초기화
+        // Firebase 초기화 (중복 초기화 방지)
         let db = null;
-        try {
-            firebase.initializeApp(firebaseConfig);
+        if (!firebase.apps.length) {
+            try {
+                firebase.initializeApp(firebaseConfig);
+                db = firebase.database();
+                console.log('✅ Firebase 연결 성공');
+            } catch (error) {
+                console.warn('⚠️ Firebase 설정 필요:', error);
+            }
+        } else {
             db = firebase.database();
-            console.log('✅ Firebase 연결 성공');
-        } catch (error) {
-            console.warn('⚠️ Firebase 설정 필요:', error);
+            console.log('✅ Firebase 이미 초기화됨');
         }
 
         // ============================================
@@ -393,6 +398,7 @@
         let playDuration = 0;
         let timerInterval = null;
         let remainingTime = 0;
+        let isPlayerReady = false;
 
         // 재생 시간 설정 (Firebase에서 실시간 동기화)
         let minDuration = 90;
@@ -462,6 +468,10 @@
 
         // YouTube API 준비
         function onYouTubeIframeAPIReady() {
+            if (player) {
+                player.destroy();
+            }
+            
             player = new YT.Player('player', {
                 height: '100%',
                 width: '100%',
@@ -479,6 +489,7 @@
         }
 
         function onPlayerReady(event) {
+            isPlayerReady = true;
             document.getElementById('songCount').textContent = `총 ${songs.length}곡`;
             renderPlaylist();
             playRandomSong();
@@ -551,6 +562,11 @@
 
         // 특정 곡 재생
         function playSongByIndex(index) {
+            if (!isPlayerReady || !player || !player.loadVideoById) {
+                console.warn('플레이어가 준비되지 않았습니다.');
+                return;
+            }
+            
             currentSongIndex = index;
             const song = songs[currentSongIndex];
             playDuration = getRandomDuration();
@@ -559,17 +575,20 @@
             updatePlayingIndicator();
             startTimer(playDuration);
             
-            if (player && player.loadVideoById) {
-                player.loadVideoById({
-                    videoId: song.id,
-                    startSeconds: 0,
-                    endSeconds: playDuration
-                });
-            }
+            player.loadVideoById({
+                videoId: song.id,
+                startSeconds: 0,
+                endSeconds: playDuration
+            });
         }
 
         // 랜덤 곡 재생
         function playRandomSong() {
+            if (!isPlayerReady || !player || !player.loadVideoById) {
+                console.warn('플레이어가 준비되지 않았습니다.');
+                return;
+            }
+            
             currentSongIndex = Math.floor(Math.random() * songs.length);
             const song = songs[currentSongIndex];
             playDuration = getRandomDuration();
@@ -578,13 +597,11 @@
             updatePlayingIndicator();
             startTimer(playDuration);
             
-            if (player && player.loadVideoById) {
-                player.loadVideoById({
-                    videoId: song.id,
-                    startSeconds: 0,
-                    endSeconds: playDuration
-                });
-            }
+            player.loadVideoById({
+                videoId: song.id,
+                startSeconds: 0,
+                endSeconds: playDuration
+            });
         }
 
         // 새로고침
@@ -592,7 +609,23 @@
             if (timerInterval) {
                 clearInterval(timerInterval);
             }
+            
+            // Firebase 리스너 정리
+            if (db) {
+                db.ref('settings/player2').off();
+            }
+            
+            // 플레이어 정리
+            if (player && player.destroy) {
+                player.destroy();
+            }
+            
             location.reload();
+        }
+
+        // YouTube API가 이미 로드된 경우 처리
+        if (typeof YT !== 'undefined' && YT.Player) {
+            onYouTubeIframeAPIReady();
         }
 
         // 개발자 도구 열림 감지 (조용히 처리)
@@ -600,7 +633,7 @@
             const threshold = 160;
             if (window.outerWidth - window.innerWidth > threshold || 
                 window.outerHeight - window.innerHeight > threshold) {
-                location.reload();
+                reloadPage();
             }
         }, 2000);
     </script>
