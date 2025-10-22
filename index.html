@@ -325,13 +325,25 @@
         // 🎵 여기서 곡 리스트를 수정하세요!
         // ============================================
         const songs = [
-            { id: 'ZJo6KHpI-2k', title: '한계령 (Hankyeryeong Pass) Official MV' },
-            { id: '0JeQF_nrSmU', title: '내 곁에 있어주 (Stay by My Side) Official MV' },
+            { id: 'Ghg7vG3NMs4', title: 'Hankyeryeong Pass'},
+            { id: 'ILppFoa3FTI', title: 'Lonely Love' },
+            { id: 'DKgiBUaZXr4', title: 'My Reflection in My Heart' },
             { id: 'BRiBNS0aTVo', title: '내 곁에 있어주 | 야외녹음실 ｜LIVE' },
-            { id: 'ZOPl8hBKd5c', title: '하이뮨의 NEW CF 촬영 현장'},
-            { id: 'jXJKJc5fZnE', title: '홀로된 사랑 (Lonely Love) Official MV' },
+            { id: '1LlNcwtxsgg', title: 'I\'ll Give You the Love I Have Left'},
+            { id: 'rsW-F7IRGmU', title: 'Just a Friend' },
+            { id: 'H8ZnFKkc7ps', title: 'That Day'},
+            { id: 'q78AVE07wdI', title: 'I will let go' },
+            { id: '0JeQF_nrSmU', title: '내 곁에 있어주 (Stay by My Side) Official MV'},
+            { id: '33xZoSnV5t0', title: 'Stay by My Side(내 곁에 있어주) | 1theK' },
+            { id: 'ZJo6KHpI-2k', title: '한계령 (Hankyeryeong Pass) Official MV' },
+            { id: 'C7Y9D4hV3QU', title: 'Hankyeryeong Pass(한계령) | 1theK'},
+            { id: 'iQ4CCJgJKXM', title: '홀로된 사랑 | 트롯챔피언 | EP.72'},
+            { id: '-zYhlQn6yVI', title: '내 이름 아시죠 | 사랑의콜센타'},
+            { id: 'ZOPl8hBKd5c', title: ' 하이뮨의 NEW CF 촬영 현장'},
+            { id: 'jXJKJc5fZnE', title: '홀로된 사랑 (Lonely Love) Official MV'},
             { id: '6lq_G6l4xRs', title: 'Lonely Love(홀로된 사랑) | 1theK' }
-        ];
+            
+       ];
         let player;
         let currentSongIndex = -1;
         let playDuration = 0;
@@ -459,24 +471,14 @@
         }
 
         // 랜덤 곡 재생
-
-  function getRandomTime() {
-      return Math.floor(Math.random() * (105 - 95 + 1)) + 95;
-    }
-        
- // 🎵 랜덤 영상 재생
-    function playNextRandom() {
-      clearInterval(countdownInterval);
-      const randomIndex = Math.floor(Math.random() * videos.length);
-      currentIndex = randomIndex;
-      const video = videos[randomIndex];
-      const iframe = document.getElementById("videoFrame");
-      const randomStart = Math.floor(Math.random() * 20); // 시작 위치 약간 랜덤
-      iframe.src = `https://www.youtube.com/embed/${video.id}?autoplay=1&start=${randomStart}`;
-      document.getElementById("videoTitle").textContent = video.title;
-      startCountdown(getRandomTime());
-    }
-
+        function playRandomSong() {
+            currentSongIndex = Math.floor(Math.random() * songs.length);
+            const song = songs[currentSongIndex];
+            playDuration = Math.floor(Math.random() * 11) + 45;
+            
+            document.getElementById('currentSong').textContent = song.title;
+            updatePlayingIndicator();
+            startTimer(playDuration);
             
             if (player && player.loadVideoById) {
                 player.loadVideoById({
@@ -506,11 +508,6 @@
     </script>
 </body>
 </html>
-
-
-
-
-
 
 
 
