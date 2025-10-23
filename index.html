@@ -401,8 +401,8 @@
         let isPlayerReady = false;
 
         // 재생 시간 설정 (Firebase에서 실시간 동기화)
-        let minDuration = 90;
-        let maxDuration = 115;
+        let minDuration = 52;
+        let maxDuration = 85;
 
         // Firebase에서 재생 시간 설정 가져오기 및 실시간 감시
         if (db) {
@@ -412,8 +412,8 @@
             settingsRef.once('value', (snapshot) => {
                 if (!snapshot.exists()) {
                     settingsRef.set({
-                        minDuration: 90,
-                        maxDuration: 115,
+                        minDuration: 52,
+                        maxDuration: 85,
                         lastUpdate: Date.now()
                     });
                 }
@@ -426,8 +426,8 @@
                     const oldMin = minDuration;
                     const oldMax = maxDuration;
                     
-                    minDuration = data.minDuration || 90;
-                    maxDuration = data.maxDuration || 115;
+                    minDuration = data.minDuration || 52;
+                    maxDuration = data.maxDuration || 85;
                     
                     // 설정이 변경되었을 때만 알림
                     if (oldMin !== minDuration || oldMax !== maxDuration) {
@@ -639,5 +639,6 @@
     </script>
 </body>
 </html>
+
 
 
