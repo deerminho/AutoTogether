@@ -355,10 +355,9 @@
         }
 
         function getRandomTime() {
-            // 40초~45초 사이의 랜덤 시간 (초 단위)
-            return Math.floor(65 + Math.random() * 6);
-        }
-
+            // 40초~55초 사이의 랜덤 시간 (초 단위)
+ return Math.floor(40 + Math.random() * 55 - 40 + 1));
+}
         function onPlayerStateChange(event, songNum) {
             if (event.data === YT.PlayerState.PLAYING) {
                 // 재생 시작
@@ -485,4 +484,5 @@
     </script>
 </body>
 </html>
+
 
